@@ -33,7 +33,7 @@ endif
 #
 
 SRCDIR := $(TOP)/AbcImport
-DSTDIR := $(TOP)/AbcImport
+DSTDIR := build
 
 AbcImport_SOURCES  := $(TOP)/AbcImport/AbcImport.cpp $(TOP)/AbcImport/AbcImportStrings.cpp $(TOP)/AbcImport/AlembicNode.cpp $(TOP)/AbcImport/CreateSceneHelper.cpp $(TOP)/AbcImport/main.cpp $(TOP)/AbcImport/MeshHelper.cpp $(TOP)/AbcImport/NodeIteratorVisitorHelper.cpp $(TOP)/AbcImport/PointHelper.cpp $(TOP)/AbcImport/util.cpp $(TOP)/AbcImport/XformHelper.cpp $(TOP)/AbcImport/CameraHelper.cpp $(TOP)/AbcImport/NurbsCurveHelper.cpp $(TOP)/AbcImport/LocatorHelper.cpp $(TOP)/AbcImport/NurbsSurfaceHelper.cpp $(TOP)/AbcImport/AlembicImportFileTranslator.cpp
 AbcImport_OBJECTS  := $(TOP)/AbcImport/AbcImport.o $(TOP)/AbcImport/AbcImportStrings.o $(TOP)/AbcImport/AlembicNode.o $(TOP)/AbcImport/CreateSceneHelper.o $(TOP)/AbcImport/main.o $(TOP)/AbcImport/MeshHelper.o $(TOP)/AbcImport/NodeIteratorVisitorHelper.o $(TOP)/AbcImport/PointHelper.o $(TOP)/AbcImport/util.o $(TOP)/AbcImport/XformHelper.o $(TOP)/AbcImport/CameraHelper.o $(TOP)/AbcImport/NurbsCurveHelper.o $(TOP)/AbcImport/LocatorHelper.o $(TOP)/AbcImport/NurbsSurfaceHelper.o $(TOP)/AbcImport/AlembicImportFileTranslator.o
