@@ -56,6 +56,7 @@ class MayaNurbsCurveWriter
     unsigned int getNumCVs();
     unsigned int getNumCurves();
     AttributesWriterPtr getAttrs() {return mAttrs;};
+    const MDagPath& getDagPath() const {return mRootDagPath;}
 
   private:
 

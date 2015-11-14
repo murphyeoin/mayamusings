@@ -259,7 +259,7 @@ void MayaMeshWriter::getUVs(std::vector<float> & uvs,
 
 MayaMeshWriter::MayaMeshWriter(MDagPath & iDag,
     Alembic::Abc::OObject & iParent, Alembic::Util::uint32_t iTimeIndex,
-    const JobArgs & iArgs, GetMembersMap& gmMap)
+    const JobArgs & iArgs, GetMembersMap& gmMap, util::InstanceMap& instanceMap)
   : mNoNormals(iArgs.noNormals),
     mWriteUVs(iArgs.writeUVs),
     mWriteColorSets(iArgs.writeColorSets),
@@ -285,11 +285,30 @@ MayaMeshWriter::MayaMeshWriter(MDagPath & iDag,
     MString name = lMesh.name();
     name = util::stripNamespaces(name, iArgs.stripNamespace);
 
+    unsigned long id = (unsigned long)&surface;
+
+    bool addInstanceMaster = false;
+    if (iDag.isInstanced(false)) {
+    	if (instanceMap.find(id)== instanceMap.end()) {
+    		addInstanceMaster = true;
+    		std::cerr <<  "Making instance master: " << iDag.fullPathName() << " " <<  " number?" << iDag.instanceNumber()  << std::endl;
+    	}
+    	else {
+    		iParent.addChildInstance(instanceMap[id], name.asChar());
+    		std::cerr << "at " << iParent.getName() << "add an instance of " << instanceMap[id].getFullName() << " called " << name.asChar() << std::endl;
+    		return;
+    	}
+    }
+
+
+
     // check to see if this poly has been tagged as a SubD
     MPlug plug = lMesh.findPlug("SubDivisionMesh");
     if ( !plug.isNull() && plug.asBool() )
     {
         Alembic::AbcGeom::OSubD obj(iParent, name.asChar(), iTimeIndex);
+        if (addInstanceMaster)
+        	instanceMap[id] = obj;
         mSubDSchema = obj.getSchema();
 
         Alembic::AbcGeom::OV2fGeomParam::Sample uvSamp;
@@ -325,6 +344,8 @@ MayaMeshWriter::MayaMeshWriter(MDagPath & iDag,
     else
     {
         Alembic::AbcGeom::OPolyMesh obj(iParent, name.asChar(), iTimeIndex);
+        if (addInstanceMaster)
+        	instanceMap[id] = obj;
         mPolySchema = obj.getSchema();
 
         Alembic::AbcGeom::OV2fGeomParam::Sample uvSamp;
@@ -761,6 +782,7 @@ void MayaMeshWriter::writePoly(
     {
         MGlobal::displayError( "MFnMesh() failed for MayaMeshWriter" );
     }
+
 
     std::vector<float> points;
     std::vector<Alembic::Util::int32_t> facePoints;

@@ -74,8 +74,10 @@ class MayaTransformWriter
     bool isAnimated() const;
     Alembic::Abc::OObject getObject() {return mSchema.getObject();};
     AttributesWriterPtr getAttrs() {return mAttrs;};
+    const MDagPath& getDagPath() const {return mDagPath;}
 
   private:
+    MDagPath mDagPath;
 
     Alembic::AbcGeom::OXformSchema mSchema;
     AttributesWriterPtr mAttrs;

@@ -55,6 +55,7 @@ class MayaLocatorWriter
     void write();
     bool isAnimated() const;
     AttributesWriterPtr getAttrs() {return mAttrs;};
+    const MDagPath& getDagPath() const {return mDagPath;}
 
   private:
 

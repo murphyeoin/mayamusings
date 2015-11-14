@@ -16,8 +16,9 @@ ifndef INCL_BUILDRULES
 #
 # Include platform specific build settings
 #
-TOP := ..
+TOP := /home/eoin/Documents/mayamusings/MayaAlembic
 include $(TOP)/buildrules
+
 
 
 #
@@ -33,10 +34,12 @@ endif
 #
 
 SRCDIR := $(TOP)/AbcImport
-DSTDIR := build
+OBJDIR := $(TOP)/AbcImport
+DSTDIR := $(TOP)/AbcImport/build
 
-AbcImport_SOURCES  := $(TOP)/AbcImport/AbcImport.cpp $(TOP)/AbcImport/AbcImportStrings.cpp $(TOP)/AbcImport/AlembicNode.cpp $(TOP)/AbcImport/CreateSceneHelper.cpp $(TOP)/AbcImport/main.cpp $(TOP)/AbcImport/MeshHelper.cpp $(TOP)/AbcImport/NodeIteratorVisitorHelper.cpp $(TOP)/AbcImport/PointHelper.cpp $(TOP)/AbcImport/util.cpp $(TOP)/AbcImport/XformHelper.cpp $(TOP)/AbcImport/CameraHelper.cpp $(TOP)/AbcImport/NurbsCurveHelper.cpp $(TOP)/AbcImport/LocatorHelper.cpp $(TOP)/AbcImport/NurbsSurfaceHelper.cpp $(TOP)/AbcImport/AlembicImportFileTranslator.cpp
-AbcImport_OBJECTS  := $(TOP)/AbcImport/AbcImport.o $(TOP)/AbcImport/AbcImportStrings.o $(TOP)/AbcImport/AlembicNode.o $(TOP)/AbcImport/CreateSceneHelper.o $(TOP)/AbcImport/main.o $(TOP)/AbcImport/MeshHelper.o $(TOP)/AbcImport/NodeIteratorVisitorHelper.o $(TOP)/AbcImport/PointHelper.o $(TOP)/AbcImport/util.o $(TOP)/AbcImport/XformHelper.o $(TOP)/AbcImport/CameraHelper.o $(TOP)/AbcImport/NurbsCurveHelper.o $(TOP)/AbcImport/LocatorHelper.o $(TOP)/AbcImport/NurbsSurfaceHelper.o $(TOP)/AbcImport/AlembicImportFileTranslator.o
+
+AbcImport_SOURCES  := $(SRCDIR)/AbcImport.cpp $(SRCDIR)/AbcImportStrings.cpp $(SRCDIR)/AlembicNode.cpp $(SRCDIR)/CreateSceneHelper.cpp $(SRCDIR)/main.cpp $(SRCDIR)/MeshHelper.cpp $(SRCDIR)/NodeIteratorVisitorHelper.cpp $(SRCDIR)/PointHelper.cpp $(SRCDIR)/util.cpp $(SRCDIR)/XformHelper.cpp $(SRCDIR)/CameraHelper.cpp $(SRCDIR)/NurbsCurveHelper.cpp $(SRCDIR)/LocatorHelper.cpp $(SRCDIR)/NurbsSurfaceHelper.cpp $(SRCDIR)/AlembicImportFileTranslator.cpp
+AbcImport_OBJECTS  := $(OBJDIR)/AbcImport.o $(OBJDIR)/AbcImportStrings.o $(OBJDIR)/AlembicNode.o $(OBJDIR)/CreateSceneHelper.o $(OBJDIR)/main.o $(OBJDIR)/MeshHelper.o $(OBJDIR)/NodeIteratorVisitorHelper.o $(OBJDIR)/PointHelper.o $(OBJDIR)/util.o  $(OBJDIR)/XformHelper.o $(OBJDIR)/CameraHelper.o $(OBJDIR)/NurbsCurveHelper.o $(OBJDIR)/LocatorHelper.o $(OBJDIR)/NurbsSurfaceHelper.o $(OBJDIR)/AlembicImportFileTranslator.o
 AbcImport_PLUGIN   := $(DSTDIR)/AbcImport.$(EXT)
 AbcImport_MAKEFILE := $(DSTDIR)/Makefile
 
@@ -49,6 +52,7 @@ AbcImport_MAKEFILE := $(DSTDIR)/Makefile
 #       {pluginName}_EXTRA_INCLUDES
 #       {pluginName}_EXTRA_LIBS
 -include $(SRCDIR)/Makefile.inc
+
 
 
 #
@@ -68,15 +72,15 @@ $(AbcImport_PLUGIN):  LIBS     := $(LIBS)   -lOpenMaya -lFoundation -lOpenMayaAn
 # Rules definitions
 #
 
-.PHONY: depend_AbcImport clean_AbcImport Clean_AbcImport
+.PHONY: clean_AbcImport Clean_AbcImport
 
+%.ox :	%.cpp
+	$(C++) -c $(INCLUDES) $(C++FLAGS) $< -o $@
 
 $(AbcImport_PLUGIN): $(AbcImport_OBJECTS) 
 	-rm -f $@
 	$(LD) -o $@ $(LFLAGS) $^ $(LIBS)
 
-depend_AbcImport :
-	makedepend $(INCLUDES) $(MDFLAGS) -f$(DSTDIR)/Makefile $(AbcImport_SOURCES)
 
 clean_AbcImport:
 	-rm -f $(AbcImport_OBJECTS)
@@ -86,7 +90,6 @@ Clean_AbcImport:
 
 
 prebuiltPlugins: $(AbcImport_PLUGIN)
-depend:	 depend_AbcImport
 clean:	 clean_AbcImport
 Clean:	 Clean_AbcImport
 

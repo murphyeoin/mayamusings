@@ -178,6 +178,10 @@ private:
     // of parts of meshes.  They are to get around a problem where a shape
     // wont shade correctly after a swap if it is shaded per face
     std::map < MObject, MSelectionList, ltMObj > mShaderMeshMap;
+
+
+    std::vector< std::pair<Alembic::Abc::ObjectReaderPtr, Alembic::Abc::ObjectReaderPtr> > instancingData;
+
 };  // class CreateSceneVisitor
 
 

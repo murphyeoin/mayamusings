@@ -503,7 +503,17 @@ AlembicObjectPtr CreateSceneVisitor::previsit(AlembicObjectPtr iParentObject)
         if (childObject)
         {
             iParentObject->addChild(childObject);
+
+            std::cerr << child.isInstanceRoot() << "XXXXXXX" << child.getFullName() << " t" << child.instanceSourcePath() << std::endl;
+
+            if (child.isInstanceRoot()) {
+            	std::cerr << "instancing - object:" << childObject->object().getFullName()  << std::endl; //" is instance of " << childObject->object().instanceSourcePath() << std::endl;
+            	instancingData.push_back(std::pair< Alembic::Abc::ObjectReaderPtr, Alembic::Abc::ObjectReaderPtr >(childObject->object().getParent().getPtr(), childObject->object().getPtr()));
+            }
+
         }
+
+
     }
 
     // We traverse a tree in postorder. The invarient is that iParentObject

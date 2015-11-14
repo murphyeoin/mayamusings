@@ -498,7 +498,7 @@ bool setSampledRotation(Alembic::AbcGeom::XformSample& sample,
 }
 
 MayaTransformWriter::MayaTransformWriter(Alembic::AbcGeom::OObject & iParent,
-    MDagPath & iDag, Alembic::Util::uint32_t iTimeIndex, const JobArgs & iArgs)
+    MDagPath & iDag, Alembic::Util::uint32_t iTimeIndex, const JobArgs & iArgs) : mDagPath(iDag)
 {
     mFilterEulerRotations = iArgs.filterEulerRotations;
     mJointOrientOpIndex[0] = mJointOrientOpIndex[1] = mJointOrientOpIndex[2] =

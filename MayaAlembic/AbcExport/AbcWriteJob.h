@@ -149,6 +149,14 @@ struct AbcWriteJobStatistics
     unsigned int mCameraAnimNum;
 };
 
+struct ltMObj
+{
+  bool operator()(const MObject & s1, const MObject & s2) const
+  {
+    return (&s1) < (&s2);
+  }
+};
+
 class AbcWriteJob
 {
   public:
@@ -227,7 +235,10 @@ class AbcWriteJob
 
     AbcWriteJobStatistics mStats;
     JobArgs mArgs;
+
+    util::InstanceMap instanceMap;
 };
+
 
 typedef Alembic::Util::shared_ptr < AbcWriteJob > AbcWriteJobPtr;
 

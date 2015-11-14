@@ -16,7 +16,7 @@ ifndef INCL_BUILDRULES
 #
 # Include platform specific build settings
 #
-TOP := ..
+TOP := /home/eoin/Documents/mayamusings/MayaAlembic
 include $(TOP)/buildrules
 
 
@@ -33,7 +33,7 @@ endif
 #
 
 SRCDIR := $(TOP)/AbcExport
-DSTDIR := $(TOP)/AbcExport
+DSTDIR := $(TOP)/AbcExport/build
 
 AbcExport_SOURCES  := $(TOP)/AbcExport/AbcExport.cpp $(TOP)/AbcExport/AbcWriteJob.cpp $(TOP)/AbcExport/AttributesWriter.cpp $(TOP)/AbcExport/MayaMeshWriter.cpp $(TOP)/AbcExport/MayaPointPrimitiveWriter.cpp $(TOP)/AbcExport/MayaTransformWriter.cpp $(TOP)/AbcExport/MayaUtility.cpp $(TOP)/AbcExport/MayaCameraWriter.cpp $(TOP)/AbcExport/MayaNurbsCurveWriter.cpp $(TOP)/AbcExport/MayaLocatorWriter.cpp $(TOP)/AbcExport/MayaNurbsSurfaceWriter.cpp
 AbcExport_OBJECTS  := $(TOP)/AbcExport/AbcExport.o $(TOP)/AbcExport/AbcWriteJob.o $(TOP)/AbcExport/AttributesWriter.o $(TOP)/AbcExport/MayaMeshWriter.o $(TOP)/AbcExport/MayaPointPrimitiveWriter.o $(TOP)/AbcExport/MayaTransformWriter.o $(TOP)/AbcExport/MayaUtility.o $(TOP)/AbcExport/MayaCameraWriter.o $(TOP)/AbcExport/MayaNurbsCurveWriter.o $(TOP)/AbcExport/MayaLocatorWriter.o $(TOP)/AbcExport/MayaNurbsSurfaceWriter.o

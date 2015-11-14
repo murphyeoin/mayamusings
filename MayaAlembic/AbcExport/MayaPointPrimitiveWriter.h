@@ -55,6 +55,7 @@ class MayaPointPrimitiveWriter
     bool isAnimated() const;
     unsigned int getNumCVs();
     AttributesWriterPtr getAttrs() {return mAttrs;};
+    const MDagPath& getDagPath() const {return mDagPath;}
 
   private:
 

@@ -62,13 +62,14 @@ class MayaMeshWriter
 
     MayaMeshWriter(MDagPath & iDag, Alembic::Abc::OObject & iParent,
         Alembic::Util::uint32_t iTimeIndex, const JobArgs & iArgs,
-        GetMembersMap& gmMap);
+        GetMembersMap& gmMap, util::InstanceMap& instanceMap);
     void write();
     bool isAnimated() const;
     bool isSubD();
     unsigned int getNumCVs();
     unsigned int getNumFaces();
     AttributesWriterPtr getAttrs() {return mAttrs;};
+    const MDagPath& getDagPath() const {return mDagPath;}
 
   private:
 

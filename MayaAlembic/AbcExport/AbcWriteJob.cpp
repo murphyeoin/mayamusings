@@ -165,7 +165,7 @@ AbcWriteJob::AbcWriteJob(const char * iFileName,
     Alembic::AbcCoreAbstract::TimeSamplingPtr iTransTime,
     std::set<double> & iShapeFrames,
     Alembic::AbcCoreAbstract::TimeSamplingPtr iShapeTime,
-    const JobArgs & iArgs)
+    const JobArgs & iArgs) : instanceMap()
 {
     MStatus status;
     mFileName = iFileName;
@@ -576,8 +576,8 @@ void AbcWriteJob::setup(double iFrame, MayaTransformWriterPtr iParent, GetMember
         if (iParent != NULL)
         {
             Alembic::Abc::OObject obj = iParent->getObject();
-            MayaMeshWriterPtr mesh(new MayaMeshWriter(mCurDag, obj,
-                mShapeTimeIndex, mArgs, gmMap));
+
+            MayaMeshWriterPtr mesh(new MayaMeshWriter(mCurDag, obj, mShapeTimeIndex, mArgs, gmMap, instanceMap));
 
             if (mesh->isAnimated() && mShapeTimeIndex != 0)
             {
@@ -835,6 +835,7 @@ bool AbcWriteJob::eval(double iFrame)
             meshEnd = mMeshList.end();
             for (meshIt = mMeshList.begin(); meshIt != meshEnd; meshIt++)
             {
+            	std::cerr << "x Mesh is instanced?" << (*meshIt)->getDagPath().fullPathName() << " " <<  (*meshIt)->getDagPath().isInstanced(false) << " " << (*meshIt)->getDagPath().instanceNumber() << std::endl;
                 (*meshIt)->write();
                 if ((*meshIt)->isSubD())
                 {

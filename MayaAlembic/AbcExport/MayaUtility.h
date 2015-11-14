@@ -55,6 +55,9 @@ struct cmpDag
 };
 typedef std::set< MDagPath, cmpDag > ShapeSet;
 
+
+typedef std::map<unsigned long, Alembic::Abc::OObject> InstanceMap;
+
 inline MStatus isFloat(MString str, const MString & usage)
 {
     MStatus status = MS::kSuccess;

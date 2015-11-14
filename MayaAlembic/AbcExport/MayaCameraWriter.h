@@ -53,6 +53,7 @@ class MayaCameraWriter
     AttributesWriterPtr getAttrs() {return mAttrs;};
     void write();
     bool isAnimated() const;
+    const MDagPath& getDagPath() const {return mDagPath;}
 
   private:
 
