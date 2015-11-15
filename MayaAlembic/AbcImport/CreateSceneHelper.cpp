@@ -52,6 +52,7 @@
 #include <maya/MDoubleArray.h>
 #include <maya/MPlug.h>
 #include <maya/MDGModifier.h>
+#include <maya/MDagModifier.h>
 #include <maya/MFnCamera.h>
 #include <maya/MFnDoubleArrayData.h>
 #include <maya/MFnDagNode.h>
@@ -433,44 +434,51 @@ void CreateSceneVisitor::visit(AlembicObjectPtr iObject)
 {
     Alembic::Abc::IObject iObj = iObject->object();
 
+    if (iObj.isInstanceRoot()) {
+    	std::cerr << "skipping" << iObj.getFullName() << " is instance root" << std::endl;
+    	return;
+    }
+
+    MObject created = MObject::kNullObj;
+
     if ( Alembic::AbcGeom::IXform::matches(iObj.getHeader()) )
     {
         Alembic::AbcGeom::IXform xform(iObj, Alembic::Abc::kWrapExisting);
-        (*this)(xform, iObject);
+        created = (*this)(xform, iObject);
     }
     else if ( Alembic::AbcGeom::ISubD::matches(iObj.getHeader()) )
     {
         Alembic::AbcGeom::ISubD mesh(iObj, Alembic::Abc::kWrapExisting);
-        (*this)(mesh);
+        created = (*this)(mesh);
     }
     else if ( Alembic::AbcGeom::IPolyMesh::matches(iObj.getHeader()) )
     {
         Alembic::AbcGeom::IPolyMesh mesh(iObj, Alembic::Abc::kWrapExisting);
-        (*this)(mesh);
+        created = (*this)(mesh);
     }
     else if ( Alembic::AbcGeom::ICamera::matches(iObj.getHeader()) )
     {
         Alembic::AbcGeom::ICamera cam(iObj, Alembic::Abc::kWrapExisting);
-        (*this)(cam);
+        created = (*this)(cam);
     }
     else if ( Alembic::AbcGeom::ICurves::matches(iObj.getHeader()) )
     {
         Alembic::AbcGeom::ICurves curves(iObj, Alembic::Abc::kWrapExisting);
-        (*this)(curves);
+        created = (*this)(curves);
     }
     else if ( Alembic::AbcGeom::INuPatch::matches(iObj.getHeader()) )
     {
         Alembic::AbcGeom::INuPatch nurbs(iObj, Alembic::Abc::kWrapExisting);
-        (*this)(nurbs);
+        created = (*this)(nurbs);
     }
     else if ( Alembic::AbcGeom::IPoints::matches(iObj.getHeader()) )
     {
         Alembic::AbcGeom::IPoints pts(iObj, Alembic::Abc::kWrapExisting);
-        (*this)(pts);
+        created = (*this)(pts);
     }
     else if ( iObj.getHeader().getMetaData().get("schema") == "" )
     {
-        createEmptyObject(iObject);
+    	created = createEmptyObject(iObject);
     }
     else
     {
@@ -479,6 +487,7 @@ void CreateSceneVisitor::visit(AlembicObjectPtr iObject)
         theWarning += iObj.getMetaData().get("schema").c_str();
         printWarning(theWarning);
     }
+    iObject->theObject = created;
 }
 
 AlembicObjectPtr CreateSceneVisitor::previsit(AlembicObjectPtr iParentObject)
@@ -502,18 +511,10 @@ AlembicObjectPtr CreateSceneVisitor::previsit(AlembicObjectPtr iParentObject)
 
         if (childObject)
         {
-            iParentObject->addChild(childObject);
-
-            std::cerr << child.isInstanceRoot() << "XXXXXXX" << child.getFullName() << " t" << child.instanceSourcePath() << std::endl;
-
-            if (child.isInstanceRoot()) {
-            	std::cerr << "instancing - object:" << childObject->object().getFullName()  << std::endl; //" is instance of " << childObject->object().instanceSourcePath() << std::endl;
-            	instancingData.push_back(std::pair< Alembic::Abc::ObjectReaderPtr, Alembic::Abc::ObjectReaderPtr >(childObject->object().getParent().getPtr(), childObject->object().getPtr()));
-            }
-
+        	instancingData.insert(std::pair<Alembic::Abc::ObjectReaderPtr, AlembicObjectPtr >(child.getPtr(), childObject));
+            std::cerr << "adding to instancing data" << child.getPtr() << " " << child.getFullName() << std::endl;
+        	iParentObject->addChild(childObject);
         }
-
-
     }
 
     // We traverse a tree in postorder. The invarient is that iParentObject
@@ -528,6 +529,63 @@ AlembicObjectPtr CreateSceneVisitor::previsit(AlembicObjectPtr iParentObject)
 
     return iParentObject;
 }
+
+
+
+// postvisit the hierarchy and hook up any instances
+AlembicObjectPtr CreateSceneVisitor::postvisit(AlembicObjectPtr iParentObject) {
+	Alembic::Abc::IObject parent = iParentObject->object();
+	const MString name = parent.getName().c_str();
+	const size_t numChildren = parent.getNumChildren();
+
+	MDagModifier modi;
+
+	for (size_t i = 0; i < numChildren; ++i)
+	{
+		AlembicObjectPtr childObject = postvisit(iParentObject->getChild(i));
+		if (childObject) {
+			Alembic::Abc::IObject child = childObject->object();
+
+			std::cerr << "postvisit: isinstanceroot?" << child.isInstanceRoot() << " fullname: " << child.getFullName() << " instanceSourcePath" << child.instanceSourcePath() << std::endl;
+			MObject mayaObj = childObject->theObject;
+
+			if (child.isInstanceRoot()) {
+				Alembic::Abc::ObjectReaderPtr master = child.getPtr();
+				std::map< Alembic::Abc::ObjectReaderPtr, AlembicObjectPtr >::const_iterator i;
+				i = instancingData.find(master);
+				if (i!=instancingData.end()) {
+//					if (iParentObject->theObject!=MObject::kNullObj) {
+//						std::cerr << "Maya " << node.fullPathName() << std::endl;
+//					}
+//					else {
+//						std::cerr << "couldnt find matching maya object.." << std::endl;
+//						continue;
+//					}
+					MFnDagNode instanceParentDag(iParentObject->theObject);
+
+					std::cerr << "master for " << childObject->object().getFullName() << " is " << master->getFullName() << std::endl;
+					MFnDagNode instanceMaya(mayaObj);
+					MFnDagNode masterMaya(i->second->theObject);
+					//do all of the checks we need to do..
+					//MObject instanceParentObj = instanceMaya.parent(0);
+					//cant use mdgmodifier??reparentNode as it removes the existing parent..
+					//MFnDagNode instanceParent(instanceParentObj);
+					std::cerr << "maya equivalents are " << instanceParentDag.fullPathName() <<  " and " << masterMaya.fullPathName() << std::endl;
+					instanceParentDag.addChild(i->second->theObject, MFnDagNode::kNextPos, true);
+					//@todo check node seems to get changed somewhere?? instanceShape ->instanceShape1? rename?
+					std::cerr << "DID IT!" << instanceParentDag.fullPathName() << " added a child:" << masterMaya.fullPathName() << std::endl;
+
+				}
+				else {
+					std::cerr << "couldnt find maya node for " << master->getFullName() << std::endl;
+				}
+			}
+		}
+	}
+	modi.doIt();
+	return iParentObject;
+}
+
 
  // root of file, no creation of DG node
 MStatus CreateSceneVisitor::walk(Alembic::Abc::IArchive & iRoot)
@@ -636,10 +694,13 @@ MStatus CreateSceneVisitor::walk(Alembic::Abc::IArchive & iRoot)
         }
     }
 
+    postvisit(topObject);
+    //std::cerr
+
     return status;
 }
 
-MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::ICamera & iNode)
+MObject CreateSceneVisitor::operator()(Alembic::AbcGeom::ICamera & iNode)
 {
     MStatus status = MS::kSuccess;
     MObject cameraObj = MObject::kNullObj;
@@ -708,16 +769,16 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::ICamera & iNode)
             theError += MString("' with ");
             theError += mConnectDagNode.fullPathName();
             printError(theError);
-            return status;
+            return MObject::kNullObj;
         }
 
         addToPropList(firstProp, cameraObj);
     }
 
-    return status;
+    return status ? cameraObj : MObject::kNullObj;
 }
 
-MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::ICurves & iNode)
+MObject CreateSceneVisitor::operator()(Alembic::AbcGeom::ICurves & iNode)
 {
     MStatus status = MS::kSuccess;
     MObject curvesObj = MObject::kNullObj;
@@ -747,7 +808,7 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::ICurves & iNode)
         MString theWarning(iNode.getName().c_str());
         theWarning += " has no curves, skipping.";
         printWarning(theWarning);
-        return MS::kFailure;
+        return MObject::kNullObj;
     }
     // add animated curves to the list
     else if (!isConstant)
@@ -834,7 +895,7 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::ICurves & iNode)
             theError += MString("' with ");
             theError += mConnectDagNode.fullPathName();
             printError(theError);
-            return status;
+            return MObject::kNullObj;
         }
 
         if (!fncurve.object().isNull())
@@ -851,10 +912,10 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::ICurves & iNode)
         mConnectDagNode.pop();
     }
 
-    return status;
+    return status ? curvesObj : MObject::kNullObj;
 }
 
-MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::IPoints& iNode)
+MObject CreateSceneVisitor::operator()(Alembic::AbcGeom::IPoints& iNode)
 {
     MStatus status = MS::kSuccess;
     MObject particleObj = MObject::kNullObj;
@@ -911,10 +972,10 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::IPoints& iNode)
         mConnectDagNode.pop();
     }
 
-    return status;
+    return status ? particleObj : MObject::kNullObj;
 }
 
-MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::ISubD& iNode)
+MObject CreateSceneVisitor::operator()(Alembic::AbcGeom::ISubD& iNode)
 {
     MStatus status = MS::kSuccess;
     MObject subDObj = MObject::kNullObj;
@@ -991,7 +1052,7 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::ISubD& iNode)
             theError += MString("' with ");
             theError += mConnectDagNode.fullPathName();
             printError(theError);
-            return MS::kFailure;
+            return MObject::kNullObj;
         }
 
         if (mConnectDagNode.isValid())
@@ -1012,10 +1073,10 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::ISubD& iNode)
         mConnectDagNode.pop();
     }
 
-    return status;
+    return status ? subDObj : MObject::kNullObj;
 }
 
-MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::IPolyMesh& iNode)
+MObject CreateSceneVisitor::operator()(Alembic::AbcGeom::IPolyMesh& iNode)
 {
     MStatus status = MS::kSuccess;
     MObject polyObj = MObject::kNullObj;
@@ -1089,7 +1150,7 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::IPolyMesh& iNode)
             theError += MString("' with ");
             theError += mConnectDagNode.fullPathName();
             printError(theError);
-            return status;
+            return MObject::kNullObj;
         }
 
         if (mConnectDagNode.isValid())
@@ -1107,11 +1168,10 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::IPolyMesh& iNode)
     {
         mConnectDagNode.pop();
     }
-
-    return status;
+    return status ? polyObj : MObject::kNullObj;
 }
 
-MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::INuPatch& iNode)
+MObject CreateSceneVisitor::operator()(Alembic::AbcGeom::INuPatch& iNode)
 {
     MStatus status = MS::kSuccess;
     MObject nurbsObj = MObject::kNullObj;
@@ -1179,7 +1239,7 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::INuPatch& iNode)
             theError += MString("' with ");
             theError += mConnectDagNode.fullPathName();
             printError(theError);
-            return status;
+            return MObject::kNullObj;
         }
 
         MPlug dstPlug = fn.findPlug("create");
@@ -1192,10 +1252,10 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::INuPatch& iNode)
     {
         mConnectDagNode.pop();
     }
-    return status;
+    return status ? nurbsObj : MObject::kNullObj;
 }
 
-MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::IXform & iNode,
+MObject CreateSceneVisitor::operator()(Alembic::AbcGeom::IXform & iNode,
                                        AlembicObjectPtr iNodeObject)
 {
     MStatus status = MS::kSuccess;
@@ -1270,7 +1330,7 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::IXform & iNode,
                     theError += MString("' with ");
                     theError += mConnectDagNode.fullPathName();
                     printError(theError);
-                    return status;
+                    return MObject::kNullObj;
                 }
 
                 addToPropList(firstProp, xformObj);
@@ -1369,13 +1429,14 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::IXform & iNode,
         {
             MFnTransform trans;
             xformObj = trans.create(mParent, &status);
+            std::cerr << "1. create xform: " << name  << std::endl;
 
             if (status != MS::kSuccess)
             {
                 MString theError("Failed to create transform node ");
                 theError += name;
                 printError(theError);
-                return status;
+                return MObject::kNullObj;
             }
 
             trans.setName(name);
@@ -1409,7 +1470,7 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::IXform & iNode,
                 theError += MString(" is not compatible as a transform node. ");
                 theError += MString("Connection failed.");
                 printError(theError);
-                return MS::kFailure;
+                return MObject::kNullObj;
             }
 
         }
@@ -1418,7 +1479,6 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::IXform & iNode,
         for (size_t i = 0; i < numChildren; ++i)
         {
             mParent = saveParent;
-
             this->visit(iNodeObject->getChild(i));
         }
 
@@ -1427,11 +1487,10 @@ MStatus CreateSceneVisitor::operator()(Alembic::AbcGeom::IXform & iNode,
             mConnectDagNode.pop();
         }
     }
-
-    return status;
+    return status ? xformObj : MObject::kNullObj;
 }
 
-MStatus CreateSceneVisitor::createEmptyObject(AlembicObjectPtr iNodeObject)
+MObject CreateSceneVisitor::createEmptyObject(AlembicObjectPtr iNodeObject)
 {
     Alembic::Abc::IObject iNode = iNodeObject->object();
 
@@ -1508,13 +1567,14 @@ MStatus CreateSceneVisitor::createEmptyObject(AlembicObjectPtr iNodeObject)
     {
         MFnTransform trans;
         xformObj = trans.create(mParent, &status);
+        std::cerr << "2. create" << name  << std::endl;
 
         if (status != MS::kSuccess)
         {
             MString theError("Failed to create transform node ");
             theError += name;
             printError(theError);
-            return status;
+            return MObject::kNullObj;
         }
 
         trans.setName(name);
@@ -1532,6 +1592,6 @@ MStatus CreateSceneVisitor::createEmptyObject(AlembicObjectPtr iNodeObject)
     {
         mConnectDagNode.pop();
     }
-    return status;
+    return status ? xformObj : MObject::kNullObj;;
 }
 

@@ -77,7 +77,7 @@ typedef std::tr1::shared_ptr<AlembicObject> AlembicObjectPtr;
 class AlembicObject
 {
 public:
-    AlembicObject(const Alembic::Abc::IObject& iObject) : mObject( iObject ) {}
+    AlembicObject(const Alembic::Abc::IObject& iObject) : mObject( iObject ), theObject(MObject::kNullObj) {}
 
     const   Alembic::Abc::IObject&  object() const { return mObject; }
             Alembic::Abc::IObject&  object()       { return mObject; }
@@ -86,6 +86,7 @@ public:
     size_t  getNumChildren()                    { return mChildren.size(); }
 
     AlembicObjectPtr      getChild(size_t index){ return mChildren[index]; } 
+    MObject theObject;
 private:
     Alembic::Abc::IObject       mObject;
     std::vector<AlembicObjectPtr> mChildren;
@@ -117,20 +118,23 @@ public:
     // previsit the hierarchy and return a tree of selected nodes.
     AlembicObjectPtr previsit(AlembicObjectPtr iParentObj);
 
+    // postvisit the hierarchy and hook up any instances
+    AlembicObjectPtr postvisit(AlembicObjectPtr iParentObj);
+
     // gets the ball rolling starting the hierarchy walk
     MStatus walk(Alembic::Abc::IArchive & iRoot);
 
     void visit(AlembicObjectPtr iAlembicObj);
 
-    MStatus operator()(Alembic::AbcGeom::ICamera & iNode);
-    MStatus operator()(Alembic::AbcGeom::ICurves & iNode);
-    MStatus operator()(Alembic::AbcGeom::INuPatch & iNode);
-    MStatus operator()(Alembic::AbcGeom::IPoints & iNode);
-    MStatus operator()(Alembic::AbcGeom::IPolyMesh & iNode);
-    MStatus operator()(Alembic::AbcGeom::ISubD & iNode);
-    MStatus operator()(Alembic::AbcGeom::IXform & iNode,
+    MObject operator()(Alembic::AbcGeom::ICamera & iNode);
+    MObject operator()(Alembic::AbcGeom::ICurves & iNode);
+    MObject operator()(Alembic::AbcGeom::INuPatch & iNode);
+    MObject operator()(Alembic::AbcGeom::IPoints & iNode);
+    MObject operator()(Alembic::AbcGeom::IPolyMesh & iNode);
+    MObject operator()(Alembic::AbcGeom::ISubD & iNode);
+    MObject operator()(Alembic::AbcGeom::IXform & iNode,
                        AlembicObjectPtr iNodeObject);
-    MStatus createEmptyObject(AlembicObjectPtr iNodeObject);
+    MObject createEmptyObject(AlembicObjectPtr iNodeObject);
 
     bool hasSampledData();
 
@@ -179,8 +183,7 @@ private:
     // wont shade correctly after a swap if it is shaded per face
     std::map < MObject, MSelectionList, ltMObj > mShaderMeshMap;
 
-
-    std::vector< std::pair<Alembic::Abc::ObjectReaderPtr, Alembic::Abc::ObjectReaderPtr> > instancingData;
+    std::map< Alembic::Abc::ObjectReaderPtr, AlembicObjectPtr > instancingData;
 
 };  // class CreateSceneVisitor
 
