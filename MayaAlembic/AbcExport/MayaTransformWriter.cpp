@@ -499,7 +499,7 @@ bool setSampledRotation(Alembic::AbcGeom::XformSample& sample,
 
 //root writer
 MayaTransformWriter::MayaTransformWriter(Alembic::AbcGeom::OObject & iParent,
-    MDagPath & iDag, Alembic::Util::uint32_t iTimeIndex, const JobArgs & iArgs, util::InstanceMap& instanceMap) : mDagPath(iDag)
+    MDagPath & iDag, Alembic::Util::uint32_t iTimeIndex, const JobArgs & iArgs, util::InstanceRecorder& instanceRecorder) : mDagPath(iDag)
 {
     mFilterEulerRotations = iArgs.filterEulerRotations;
     mJointOrientOpIndex[0] = mJointOrientOpIndex[1] = mJointOrientOpIndex[2] =
@@ -515,7 +515,7 @@ MayaTransformWriter::MayaTransformWriter(Alembic::AbcGeom::OObject & iParent,
 
         Alembic::AbcGeom::OXform obj(iParent, jointName.asChar(),
             iTimeIndex);
-        instanceMap[util::CastObject(mDagPath.node())] = obj;
+        instanceRecorder.recordMaster(iDag, obj);
         mSchema = obj.getSchema();
 
         Alembic::Abc::OCompoundProperty cp;
@@ -562,7 +562,7 @@ MayaTransformWriter::MayaTransformWriter(Alembic::AbcGeom::OObject & iParent,
 
         Alembic::AbcGeom::OXform obj(iParent, transName.asChar(),
             iTimeIndex);
-        instanceMap[util::CastObject(mDagPath.node())] = obj;
+        instanceRecorder.recordMaster(iDag,obj);
         mSchema = obj.getSchema();
 
         Alembic::Abc::OCompoundProperty cp;
@@ -682,7 +682,7 @@ MayaTransformWriter::MayaTransformWriter(Alembic::AbcGeom::OObject & iParent,
 
 //non-root writer
 MayaTransformWriter::MayaTransformWriter(MayaTransformWriter & iParent,
-    MDagPath & iDag, Alembic::Util::uint32_t iTimeIndex, const JobArgs & iArgs, util::InstanceMap& instanceMap)
+    MDagPath & iDag, Alembic::Util::uint32_t iTimeIndex, const JobArgs & iArgs, util::InstanceRecorder& instanceRecorder)
 {
     mFilterEulerRotations = iArgs.filterEulerRotations;
     mJointOrientOpIndex[0] = mJointOrientOpIndex[1] = mJointOrientOpIndex[2] =
@@ -698,7 +698,7 @@ MayaTransformWriter::MayaTransformWriter(MayaTransformWriter & iParent,
 
         Alembic::AbcGeom::OXform obj(iParent.getObject(), jointName.asChar(),
             iTimeIndex);
-        instanceMap[util::CastObject(mDagPath.node())] = obj;
+        instanceRecorder.recordMaster(iDag,obj);
         mSchema = obj.getSchema();
 
         Alembic::Abc::OCompoundProperty cp;
@@ -723,7 +723,7 @@ MayaTransformWriter::MayaTransformWriter(MayaTransformWriter & iParent,
 
         Alembic::AbcGeom::OXform obj(iParent.getObject(), transName.asChar(),
             iTimeIndex);
-        instanceMap[util::CastObject(iDag.node())] = obj;
+        instanceRecorder.recordMaster(iDag,obj);
         mSchema = obj.getSchema();
 
         Alembic::Abc::OCompoundProperty cp;

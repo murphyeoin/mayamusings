@@ -236,7 +236,7 @@ class AbcWriteJob
     AbcWriteJobStatistics mStats;
     JobArgs mArgs;
 
-    util::InstanceMap instanceMap;
+    util::InstanceRecorder instanceRecorder;
 };
 
 

@@ -62,7 +62,7 @@ class MayaMeshWriter
 
     MayaMeshWriter(MDagPath & iDag, Alembic::Abc::OObject & iParent,
         Alembic::Util::uint32_t iTimeIndex, const JobArgs & iArgs,
-        GetMembersMap& gmMap, util::InstanceMap& instanceMap);
+        GetMembersMap& gmMap, util::InstanceRecorder& instanceRecorder);
     void write();
     bool isAnimated() const;
     bool isSubD();

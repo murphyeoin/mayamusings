@@ -64,10 +64,10 @@ class MayaTransformWriter
   public:
 
     MayaTransformWriter(Alembic::Abc::OObject & iParent, MDagPath & iDag, 
-        Alembic::Util::uint32_t iTimeIndex, const JobArgs & iArgs, util::InstanceMap& instanceMap);
+        Alembic::Util::uint32_t iTimeIndex, const JobArgs & iArgs, util::InstanceRecorder& instanceRecorder);
 
     MayaTransformWriter(MayaTransformWriter & iParent, MDagPath & iDag,
-        Alembic::Util::uint32_t iTimeIndex, const JobArgs & iArgs, util::InstanceMap& instanceMap);
+        Alembic::Util::uint32_t iTimeIndex, const JobArgs & iArgs, util::InstanceRecorder& instanceRecorder);
 
     ~MayaTransformWriter();
     void write();

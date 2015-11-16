@@ -259,7 +259,7 @@ void MayaMeshWriter::getUVs(std::vector<float> & uvs,
 
 MayaMeshWriter::MayaMeshWriter(MDagPath & iDag,
     Alembic::Abc::OObject & iParent, Alembic::Util::uint32_t iTimeIndex,
-    const JobArgs & iArgs, GetMembersMap& gmMap, util::InstanceMap& instanceMap)
+    const JobArgs & iArgs, GetMembersMap& gmMap, util::InstanceRecorder& instanceRecorder)
   : mNoNormals(iArgs.noNormals),
     mWriteUVs(iArgs.writeUVs),
     mWriteColorSets(iArgs.writeColorSets),
@@ -291,7 +291,7 @@ MayaMeshWriter::MayaMeshWriter(MDagPath & iDag,
     {
         Alembic::AbcGeom::OSubD obj(iParent, name.asChar(), iTimeIndex);
 
-        instanceMap[util::CastObject(iDag.node())] = obj;
+        instanceRecorder.recordMaster(iDag,obj);
 
         mSubDSchema = obj.getSchema();
 
@@ -328,7 +328,7 @@ MayaMeshWriter::MayaMeshWriter(MDagPath & iDag,
     else
     {
         Alembic::AbcGeom::OPolyMesh obj(iParent, name.asChar(), iTimeIndex);
-        instanceMap[util::CastObject(iDag.node())] = obj;
+        instanceRecorder.recordMaster(iDag,obj);
 
         mPolySchema = obj.getSchema();
 

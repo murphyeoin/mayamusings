@@ -56,8 +56,6 @@ struct cmpDag
 typedef std::set< MDagPath, cmpDag > ShapeSet;
 
 
-typedef std::map<unsigned long, Alembic::Abc::OObject> InstanceMap;
-
 inline MStatus isFloat(MString str, const MString & usage)
 {
     MStatus status = MS::kSuccess;
@@ -131,9 +129,41 @@ MString stripNamespaces(const MString & iNodeName, unsigned int iDepth);
 // returns the Help string for AbcExport
 MString getHelpText();
 
-size_t CastObject(const MObject& oNode);
 
-bool doInstancing(const MDagPath & iDag, Alembic::Abc::OObject & iParent, util::InstanceMap& instanceMap);
+
+class InstanceRecorder {
+	size_t castObject(const MObject& oNode) {return *reinterpret_cast<const size_t*>(&oNode);}
+
+	typedef std::map<unsigned long, Alembic::Abc::OObject> InstanceMap;
+	InstanceMap instanceMap;
+
+public:
+
+	InstanceRecorder() : instanceMap() {}
+
+	bool haveExistingMaster(const MDagPath & iDag) {
+		size_t id =  castObject(iDag.node());
+		return (iDag.isInstanced() && instanceMap.find(id)!= instanceMap.end());
+	}
+
+	void recordMaster(const MDagPath& iDag, const Alembic::Abc::OObject& oObj) {
+		instanceMap[castObject(iDag.node())] = oObj;
+		std::cerr <<  "master: " << iDag.fullPathName() << " " <<  " number?" << iDag.instanceNumber()  << std::endl;
+	}
+
+	void addInstance(const MDagPath& iDag, Alembic::Abc::OObject& oParent) {
+		MDagPath leaf;
+		iDag.getPath(leaf, iDag.pathCount()-1); //get last part as name
+		size_t id =  castObject(iDag.node());
+		oParent.addChildInstance(instanceMap[id], leaf.fullPathName().asChar());
+		std::cerr << "instance: " << iDag.instanceNumber() << " at parent " << oParent.getName() << " add an instance of " << instanceMap[id].getFullName() << " called " << leaf.fullPathName().asChar() << std::endl;
+	}
+
+};
+
+
+
+
 
 
 } // namespace util

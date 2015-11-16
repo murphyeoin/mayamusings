@@ -165,7 +165,7 @@ AbcWriteJob::AbcWriteJob(const char * iFileName,
     Alembic::AbcCoreAbstract::TimeSamplingPtr iTransTime,
     std::set<double> & iShapeFrames,
     Alembic::AbcCoreAbstract::TimeSamplingPtr iShapeTime,
-    const JobArgs & iArgs) : instanceMap()
+    const JobArgs & iArgs) : instanceRecorder()
 {
     MStatus status;
     mFileName = iFileName;
@@ -451,18 +451,20 @@ void AbcWriteJob::setup(double iFrame, MayaTransformWriterPtr iParent, GetMember
         {
             Alembic::Abc::OObject obj = mRoot.getTop();
             trans = MayaTransformWriterPtr(new MayaTransformWriter(
-                obj, mCurDag, mTransTimeIndex, mArgs, instanceMap));
+                obj, mCurDag, mTransTimeIndex, mArgs, instanceRecorder));
         }
         else
         {
         	Alembic::AbcGeom::OObject iiParent =  iParent->getObject();
 
-        	if (!util::doInstancing(mCurDag, iiParent, instanceMap) && mCurDag.isInstanced()) {
+        	if (instanceRecorder.haveExistingMaster(mCurDag)) {
         		//We've already got a master and we're an instamce, so dont need to do any more maya stuff
+        		instanceRecorder.addInstance(mCurDag, iiParent);
         		return;
         	}
+
             trans = MayaTransformWriterPtr(new MayaTransformWriter(
-                *iParent, mCurDag, mTransTimeIndex, mArgs, instanceMap));
+                *iParent, mCurDag, mTransTimeIndex, mArgs, instanceRecorder));
         }
 
         if (trans->isAnimated() && mTransTimeIndex != 0)
@@ -583,12 +585,13 @@ void AbcWriteJob::setup(double iFrame, MayaTransformWriterPtr iParent, GetMember
         {
             Alembic::Abc::OObject obj = iParent->getObject();
 
-			if (!util::doInstancing(mCurDag, obj, instanceMap) && mCurDag.isInstanced()) {
+			if (instanceRecorder.haveExistingMaster(mCurDag)) {
 				//We've already got a master and we're an instamce, so dont need to do any more maya stuff
+				instanceRecorder.addInstance(mCurDag, obj);
 				return;
 			}
 
-            MayaMeshWriterPtr mesh(new MayaMeshWriter(mCurDag, obj, mShapeTimeIndex, mArgs, gmMap, instanceMap));
+            MayaMeshWriterPtr mesh(new MayaMeshWriter(mCurDag, obj, mShapeTimeIndex, mArgs, gmMap, instanceRecorder));
 
             if (mesh->isAnimated() && mShapeTimeIndex != 0)
             {

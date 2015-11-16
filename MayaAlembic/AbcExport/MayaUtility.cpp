@@ -585,32 +585,3 @@ MString util::getHelpText()
 
     return ret;
 }
-
-size_t util::CastObject(const MObject& oNode)
-{
-  return *reinterpret_cast<const size_t*>(&oNode);
-}
-
-bool util::doInstancing(const MDagPath & iDag, Alembic::Abc::OObject & iParent, util::InstanceMap& instanceMap) {
-	bool addInstanceMaster = false; //if this is true the caller should create all the maya stuff and add to instanceMap
-	if (iDag.isInstanced()) {
-		size_t id =  CastObject(iDag.node());
-
-		//@todo: just because something is not instanced doest mean its a master? instances can probably have levels of indirection?
-
-		//General idea is here maya has "peered" instancing, so the first time we come across a dagnode which is an instance, we
-		//make it the master. //@todo: could this affect order/round tripping?
-
-		if (instanceMap.find(id)== instanceMap.end()) {
-			addInstanceMaster = true;
-			std::cerr <<  "master: " << iDag.fullPathName() << " " <<  " number?" << iDag.instanceNumber()  << std::endl;
-		}
-		else {
-			MDagPath leaf;
-			iDag.getPath(leaf, iDag.pathCount()-1);
-			iParent.addChildInstance(instanceMap[id], leaf.fullPathName().asChar());
-			std::cerr << "instance: " << iDag.instanceNumber() << " at parent " << iParent.getName() << " add an instance of " << instanceMap[id].getFullName() << " called " << leaf.fullPathName().asChar() << std::endl;
-		}
-	}
-	return addInstanceMaster;
-}
