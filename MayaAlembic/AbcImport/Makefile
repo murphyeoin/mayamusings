@@ -35,7 +35,7 @@ endif
 
 SRCDIR := $(TOP)/AbcImport
 OBJDIR := $(TOP)/AbcImport
-DSTDIR := $(TOP)/AbcImport/build
+DSTDIR := $(TOP)/AbcImport
 
 
 AbcImport_SOURCES  := $(SRCDIR)/AbcImport.cpp $(SRCDIR)/AbcImportStrings.cpp $(SRCDIR)/AlembicNode.cpp $(SRCDIR)/CreateSceneHelper.cpp $(SRCDIR)/main.cpp $(SRCDIR)/MeshHelper.cpp $(SRCDIR)/NodeIteratorVisitorHelper.cpp $(SRCDIR)/PointHelper.cpp $(SRCDIR)/util.cpp $(SRCDIR)/XformHelper.cpp $(SRCDIR)/CameraHelper.cpp $(SRCDIR)/NurbsCurveHelper.cpp $(SRCDIR)/LocatorHelper.cpp $(SRCDIR)/NurbsSurfaceHelper.cpp $(SRCDIR)/AlembicImportFileTranslator.cpp

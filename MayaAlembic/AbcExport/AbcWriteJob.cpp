@@ -451,12 +451,22 @@ void AbcWriteJob::setup(double iFrame, MayaTransformWriterPtr iParent, GetMember
         {
             Alembic::Abc::OObject obj = mRoot.getTop();
             trans = MayaTransformWriterPtr(new MayaTransformWriter(
-                obj, mCurDag, mTransTimeIndex, mArgs));
+                obj, mCurDag, mTransTimeIndex, mArgs, instanceMap));
         }
         else
         {
+        	Alembic::AbcGeom::OObject iiParent =  iParent->getObject();
+        	unsigned long id = (unsigned long)&ob;
+
+        	bool addInstanceMaster = util::doInstancing(mCurDag, iiParent, instanceMap);
+        	if (!addInstanceMaster && mCurDag.isInstanced()) {
+        		//We've already got a master and we're an instamce, so dont need to do any more maya stuff
+        		std::cerr << "===============early out as is instance:" << iiParent.getName() << std::endl;
+        		return;
+        	}
+        	std::cerr << "not out as is not instance:" << mCurDag.fullPathName().asChar() << " " <<mCurDag.isInstanced() <<  std::endl;
             trans = MayaTransformWriterPtr(new MayaTransformWriter(
-                *iParent, mCurDag, mTransTimeIndex, mArgs));
+                *iParent, mCurDag, mTransTimeIndex, mArgs, instanceMap));
         }
 
         if (trans->isAnimated() && mTransTimeIndex != 0)
@@ -576,6 +586,16 @@ void AbcWriteJob::setup(double iFrame, MayaTransformWriterPtr iParent, GetMember
         if (iParent != NULL)
         {
             Alembic::Abc::OObject obj = iParent->getObject();
+
+            bool addInstanceMaster = util::doInstancing(mCurDag, obj, instanceMap);
+			if (!addInstanceMaster && mCurDag.isInstanced()) {
+				//We've already got a master and we're an instamce, so dont need to do any more maya stuff
+				std::cerr << "===============mesh early out as is instance:" << obj.getName() << std::endl;
+				return;
+			}
+			std::cerr << "mesh not out as is not instance:" << mCurDag.fullPathName().asChar() << " " <<mCurDag.isInstanced() <<  std::endl;
+
+
 
             MayaMeshWriterPtr mesh(new MayaMeshWriter(mCurDag, obj, mShapeTimeIndex, mArgs, gmMap, instanceMap));
 

@@ -285,30 +285,23 @@ MayaMeshWriter::MayaMeshWriter(MDagPath & iDag,
     MString name = lMesh.name();
     name = util::stripNamespaces(name, iArgs.stripNamespace);
 
-    unsigned long id = (unsigned long)&surface;
 
-    bool addInstanceMaster = false;
-    if (iDag.isInstanced(false)) {
-    	if (instanceMap.find(id)== instanceMap.end()) {
-    		addInstanceMaster = true;
-    		std::cerr <<  "Making instance master: " << iDag.fullPathName() << " " <<  " number?" << iDag.instanceNumber()  << std::endl;
-    	}
-    	else {
-    		iParent.addChildInstance(instanceMap[id], name.asChar());
-    		std::cerr << "at " << iParent.getName() << "add an instance of " << instanceMap[id].getFullName() << " called " << name.asChar() << std::endl;
-    		return;
-    	}
-    }
-
-
+//    bool addInstanceMaster = util::doInstancing(iDag, iParent, instanceMap);
+//    if (!addInstanceMaster && iDag.isInstanced()) {
+//    	//We've already got a master and we're an instamce, so dont need to do any more maya stuff
+//    	return;
+//    }
+    unsigned long mObjectId = (unsigned long)&surface;
 
     // check to see if this poly has been tagged as a SubD
     MPlug plug = lMesh.findPlug("SubDivisionMesh");
     if ( !plug.isNull() && plug.asBool() )
     {
         Alembic::AbcGeom::OSubD obj(iParent, name.asChar(), iTimeIndex);
-        if (addInstanceMaster)
-        	instanceMap[id] = obj;
+
+        std::cerr << "writing mesh:" << name.asChar()  << " id:" << util::CastObject(iDag.node()) << std::endl;
+        instanceMap[util::CastObject(iDag.node())] = obj;
+
         mSubDSchema = obj.getSchema();
 
         Alembic::AbcGeom::OV2fGeomParam::Sample uvSamp;
@@ -344,8 +337,9 @@ MayaMeshWriter::MayaMeshWriter(MDagPath & iDag,
     else
     {
         Alembic::AbcGeom::OPolyMesh obj(iParent, name.asChar(), iTimeIndex);
-        if (addInstanceMaster)
-        	instanceMap[id] = obj;
+        std::cerr << "writing mesh:" << name.asChar()  << " id:" << util::CastObject(iDag.node()) << std::endl;
+        instanceMap[util::CastObject(iDag.node())] = obj;
+
         mPolySchema = obj.getSchema();
 
         Alembic::AbcGeom::OV2fGeomParam::Sample uvSamp;

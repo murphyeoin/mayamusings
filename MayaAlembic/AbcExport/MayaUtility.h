@@ -131,6 +131,11 @@ MString stripNamespaces(const MString & iNodeName, unsigned int iDepth);
 // returns the Help string for AbcExport
 MString getHelpText();
 
+size_t CastObject(const MObject& oNode);
+
+bool doInstancing(const MDagPath & iDag, Alembic::Abc::OObject & iParent, util::InstanceMap& instanceMap);
+
+
 } // namespace util
 
 struct PlugAndObjScalar
@@ -189,5 +194,7 @@ struct JobArgs
 
     util::ShapeSet dagPaths;
 };
+
+
 
 #endif  // _AlembicExport_MayaUtility_h_

@@ -435,7 +435,7 @@ void CreateSceneVisitor::visit(AlembicObjectPtr iObject)
     Alembic::Abc::IObject iObj = iObject->object();
 
     if (iObj.isInstanceRoot()) {
-    	std::cerr << "skipping" << iObj.getFullName() << " is instance root" << std::endl;
+    	std::cerr << "CreateSceneVisitor::visit - skipping" << iObj.getFullName() << " is instance root" << std::endl;
     	return;
     }
 
@@ -512,7 +512,6 @@ AlembicObjectPtr CreateSceneVisitor::previsit(AlembicObjectPtr iParentObject)
         if (childObject)
         {
         	instancingData.insert(std::pair<Alembic::Abc::ObjectReaderPtr, AlembicObjectPtr >(child.getPtr(), childObject));
-            std::cerr << "adding to instancing data" << child.getPtr() << " " << child.getFullName() << std::endl;
         	iParentObject->addChild(childObject);
         }
     }
@@ -546,7 +545,7 @@ AlembicObjectPtr CreateSceneVisitor::postvisit(AlembicObjectPtr iParentObject) {
 		if (childObject) {
 			Alembic::Abc::IObject child = childObject->object();
 
-			std::cerr << "postvisit: isinstanceroot?" << child.isInstanceRoot() << " fullname: " << child.getFullName() << " instanceSourcePath" << child.instanceSourcePath() << std::endl;
+			//std::cerr << "postvisit: isinstanceroot?" << child.isInstanceRoot() << " fullname: " << child.getFullName() << " instanceSourcePath" << child.instanceSourcePath() << std::endl;
 			MObject mayaObj = childObject->theObject;
 
 			if (child.isInstanceRoot()) {
@@ -554,30 +553,19 @@ AlembicObjectPtr CreateSceneVisitor::postvisit(AlembicObjectPtr iParentObject) {
 				std::map< Alembic::Abc::ObjectReaderPtr, AlembicObjectPtr >::const_iterator i;
 				i = instancingData.find(master);
 				if (i!=instancingData.end()) {
-//					if (iParentObject->theObject!=MObject::kNullObj) {
-//						std::cerr << "Maya " << node.fullPathName() << std::endl;
-//					}
-//					else {
-//						std::cerr << "couldnt find matching maya object.." << std::endl;
-//						continue;
-//					}
 					MFnDagNode instanceParentDag(iParentObject->theObject);
 
-					std::cerr << "master for " << childObject->object().getFullName() << " is " << master->getFullName() << std::endl;
+					//std::cerr << "master for " << childObject->object().getFullName() << " is " << master->getFullName() << std::endl;
 					MFnDagNode instanceMaya(mayaObj);
 					MFnDagNode masterMaya(i->second->theObject);
-					//do all of the checks we need to do..
-					//MObject instanceParentObj = instanceMaya.parent(0);
-					//cant use mdgmodifier??reparentNode as it removes the existing parent..
-					//MFnDagNode instanceParent(instanceParentObj);
-					std::cerr << "maya equivalents are " << instanceParentDag.fullPathName() <<  " and " << masterMaya.fullPathName() << std::endl;
+					//@todo do all of the checks we need to do..
+					//@todo: check cant use mdgmodifier??reparentNode as it removes the existing parent..
 					instanceParentDag.addChild(i->second->theObject, MFnDagNode::kNextPos, true);
-					//@todo check node seems to get changed somewhere?? instanceShape ->instanceShape1? rename?
-					std::cerr << "DID IT!" << instanceParentDag.fullPathName() << " added a child:" << masterMaya.fullPathName() << std::endl;
+					std::cerr << "Added Instance:" << instanceParentDag.fullPathName() << " added a child:" << masterMaya.fullPathName() << std::endl;
 
 				}
 				else {
-					std::cerr << "couldnt find maya node for " << master->getFullName() << std::endl;
+					//std::cerr << "couldnt find maya node for " << master->getFullName() << std::endl;
 				}
 			}
 		}
