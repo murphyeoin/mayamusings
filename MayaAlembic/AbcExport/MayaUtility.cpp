@@ -600,23 +600,16 @@ bool util::doInstancing(const MDagPath & iDag, Alembic::Abc::OObject & iParent, 
 
 		//General idea is here maya has "peered" instancing, so the first time we come across a dagnode which is an instance, we
 		//make it the master. //@todo: could this affect order/round tripping?
-		//
-		std::cerr << "looking for id " << id << "content" << instanceMap.size() << std::endl;
-		util::InstanceMap::const_iterator it=instanceMap.begin();
-		for (;it!=instanceMap.end();++it) {
-			std::cerr << it->first << " ";
-		}
-		std::cerr << "end" << std::endl;
 
 		if (instanceMap.find(id)== instanceMap.end()) {
 			addInstanceMaster = true;
-			std::cerr <<  "Making instance master: " << iDag.fullPathName() << " " <<  " number?" << iDag.instanceNumber()  << std::endl;
+			std::cerr <<  "master: " << iDag.fullPathName() << " " <<  " number?" << iDag.instanceNumber()  << std::endl;
 		}
 		else {
 			MDagPath leaf;
 			iDag.getPath(leaf, iDag.pathCount()-1);
 			iParent.addChildInstance(instanceMap[id], leaf.fullPathName().asChar());
-			std::cerr << "dag:" << iDag.instanceNumber() << "at parent " << iParent.getName() << " add an instance of " << instanceMap[id].getFullName() << " called " << leaf.fullPathName().asChar() << std::endl;
+			std::cerr << "instance: " << iDag.instanceNumber() << " at parent " << iParent.getName() << " add an instance of " << instanceMap[id].getFullName() << " called " << leaf.fullPathName().asChar() << std::endl;
 		}
 	}
 	return addInstanceMaster;

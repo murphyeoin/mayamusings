@@ -456,15 +456,11 @@ void AbcWriteJob::setup(double iFrame, MayaTransformWriterPtr iParent, GetMember
         else
         {
         	Alembic::AbcGeom::OObject iiParent =  iParent->getObject();
-        	unsigned long id = (unsigned long)&ob;
 
-        	bool addInstanceMaster = util::doInstancing(mCurDag, iiParent, instanceMap);
-        	if (!addInstanceMaster && mCurDag.isInstanced()) {
+        	if (!util::doInstancing(mCurDag, iiParent, instanceMap) && mCurDag.isInstanced()) {
         		//We've already got a master and we're an instamce, so dont need to do any more maya stuff
-        		std::cerr << "===============early out as is instance:" << iiParent.getName() << std::endl;
         		return;
         	}
-        	std::cerr << "not out as is not instance:" << mCurDag.fullPathName().asChar() << " " <<mCurDag.isInstanced() <<  std::endl;
             trans = MayaTransformWriterPtr(new MayaTransformWriter(
                 *iParent, mCurDag, mTransTimeIndex, mArgs, instanceMap));
         }
@@ -587,15 +583,10 @@ void AbcWriteJob::setup(double iFrame, MayaTransformWriterPtr iParent, GetMember
         {
             Alembic::Abc::OObject obj = iParent->getObject();
 
-            bool addInstanceMaster = util::doInstancing(mCurDag, obj, instanceMap);
-			if (!addInstanceMaster && mCurDag.isInstanced()) {
+			if (!util::doInstancing(mCurDag, obj, instanceMap) && mCurDag.isInstanced()) {
 				//We've already got a master and we're an instamce, so dont need to do any more maya stuff
-				std::cerr << "===============mesh early out as is instance:" << obj.getName() << std::endl;
 				return;
 			}
-			std::cerr << "mesh not out as is not instance:" << mCurDag.fullPathName().asChar() << " " <<mCurDag.isInstanced() <<  std::endl;
-
-
 
             MayaMeshWriterPtr mesh(new MayaMeshWriter(mCurDag, obj, mShapeTimeIndex, mArgs, gmMap, instanceMap));
 
@@ -855,7 +846,6 @@ bool AbcWriteJob::eval(double iFrame)
             meshEnd = mMeshList.end();
             for (meshIt = mMeshList.begin(); meshIt != meshEnd; meshIt++)
             {
-            	std::cerr << "x Mesh is instanced?" << (*meshIt)->getDagPath().fullPathName() << " " <<  (*meshIt)->getDagPath().isInstanced(false) << " " << (*meshIt)->getDagPath().instanceNumber() << std::endl;
                 (*meshIt)->write();
                 if ((*meshIt)->isSubD())
                 {

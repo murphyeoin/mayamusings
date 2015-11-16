@@ -285,21 +285,12 @@ MayaMeshWriter::MayaMeshWriter(MDagPath & iDag,
     MString name = lMesh.name();
     name = util::stripNamespaces(name, iArgs.stripNamespace);
 
-
-//    bool addInstanceMaster = util::doInstancing(iDag, iParent, instanceMap);
-//    if (!addInstanceMaster && iDag.isInstanced()) {
-//    	//We've already got a master and we're an instamce, so dont need to do any more maya stuff
-//    	return;
-//    }
-    unsigned long mObjectId = (unsigned long)&surface;
-
     // check to see if this poly has been tagged as a SubD
     MPlug plug = lMesh.findPlug("SubDivisionMesh");
     if ( !plug.isNull() && plug.asBool() )
     {
         Alembic::AbcGeom::OSubD obj(iParent, name.asChar(), iTimeIndex);
 
-        std::cerr << "writing mesh:" << name.asChar()  << " id:" << util::CastObject(iDag.node()) << std::endl;
         instanceMap[util::CastObject(iDag.node())] = obj;
 
         mSubDSchema = obj.getSchema();
@@ -337,7 +328,6 @@ MayaMeshWriter::MayaMeshWriter(MDagPath & iDag,
     else
     {
         Alembic::AbcGeom::OPolyMesh obj(iParent, name.asChar(), iTimeIndex);
-        std::cerr << "writing mesh:" << name.asChar()  << " id:" << util::CastObject(iDag.node()) << std::endl;
         instanceMap[util::CastObject(iDag.node())] = obj;
 
         mPolySchema = obj.getSchema();

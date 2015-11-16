@@ -506,10 +506,6 @@ MayaTransformWriter::MayaTransformWriter(Alembic::AbcGeom::OObject & iParent,
     mRotateOpIndex[0]      = mRotateOpIndex[1]      = mRotateOpIndex[2]      =
     mRotateAxisOpIndex[0]  = mRotateAxisOpIndex[1]  = mRotateAxisOpIndex[2]  = ~size_t(0);
 
-//    MObject node = iDag.node();
-//    unsigned long mObjectId = (unsigned long)&node;
-
-
     if (iDag.hasFn(MFn::kJoint))
     {
         MFnIkJoint joint(iDag);
@@ -519,7 +515,6 @@ MayaTransformWriter::MayaTransformWriter(Alembic::AbcGeom::OObject & iParent,
 
         Alembic::AbcGeom::OXform obj(iParent, jointName.asChar(),
             iTimeIndex);
-        std::cerr << "writing out " << util::CastObject(mDagPath.node()) << std::endl;
         instanceMap[util::CastObject(mDagPath.node())] = obj;
         mSchema = obj.getSchema();
 
@@ -567,7 +562,6 @@ MayaTransformWriter::MayaTransformWriter(Alembic::AbcGeom::OObject & iParent,
 
         Alembic::AbcGeom::OXform obj(iParent, transName.asChar(),
             iTimeIndex);
-        std::cerr << "writing out " << util::CastObject(mDagPath.node()) << std::endl;
         instanceMap[util::CastObject(mDagPath.node())] = obj;
         mSchema = obj.getSchema();
 
@@ -695,12 +689,6 @@ MayaTransformWriter::MayaTransformWriter(MayaTransformWriter & iParent,
     mRotateOpIndex[0]      = mRotateOpIndex[1]      = mRotateOpIndex[2]      =
     mRotateAxisOpIndex[0]  = mRotateAxisOpIndex[1]  = mRotateAxisOpIndex[2]  = ~size_t(0);
 
-    std::cerr << "BBB" << iDag.fullPathName().asChar() << " " << iDag.isInstanced() << std::endl;
-
-    MObject node = iDag.node();
-    unsigned long mObjectId = (unsigned long)&node;
-    std::cerr << "id:" << util::CastObject(iDag.node()) << std::endl;
-
     if (iDag.hasFn(MFn::kJoint))
     {
         MFnIkJoint joint(iDag);
@@ -735,7 +723,6 @@ MayaTransformWriter::MayaTransformWriter(MayaTransformWriter & iParent,
 
         Alembic::AbcGeom::OXform obj(iParent.getObject(), transName.asChar(),
             iTimeIndex);
-        std::cerr << "writing xform:" << transName.asChar()  << std::endl;
         instanceMap[util::CastObject(iDag.node())] = obj;
         mSchema = obj.getSchema();
 
